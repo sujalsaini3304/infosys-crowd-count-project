@@ -7,9 +7,15 @@ import React, {
 } from "react";
 import useStore from "../store";
 import { Link, useNavigate } from "react-router-dom";
+import DeleteModal from "../components/DeleteModal";
+import LogoutModal from "../components/LogoutModal";
 
 const Dashboard = () => {
-  const { username, server, set_username } = useStore();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const { username, server, set_username, set_user_email, user_email } =
+    useStore();
   const navigate = useNavigate();
   const [currentFile, setCurrentFile] = useState(null);
   const [isVideo, setIsVideo] = useState(false);
@@ -27,10 +33,19 @@ const Dashboard = () => {
   });
 
   useEffect(() => {
-    if (!username) {
-      navigate("/login", { replace: true });
+    if (
+      localStorage.getItem("username") &&
+      localStorage.getItem("user_email") &&
+      localStorage.getItem("isLogin") === "true"
+    ) {
+      set_username(localStorage.getItem("username"));
+      set_user_email(localStorage.getItem("user_email"));
+    } else {
+      if (!username && !user_email) {
+        navigate("/login", { replace: true });
+      }
     }
-  }, []);
+  }, [username, user_email, navigate, set_username, set_user_email]);
 
   const [detailedDetections, setDetailedDetections] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
@@ -375,33 +390,98 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50 font-sans text-slate-800">
       {/* Top Navigation */}
-      <nav className="bg-white border-b border-gray-200 px-6 md:px-10 h-16 md:h-[70px] flex items-center justify-between shadow-sm sticky top-0 z-50">
+      <nav className="bg-white border-b border-gray-200 px-4 sm:px-6 md:px-10 h-16 flex items-center justify-between shadow-sm sticky top-0 z-50">
+        {/* Logo + Title */}
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 md:w-10 md:h-10 bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg flex items-center justify-center text-white font-bold text-base md:text-lg">
+          <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg flex items-center justify-center text-white font-bold text-base">
             CA
           </div>
-          <span className="text-lg md:text-xl font-semibold text-slate-900 tracking-tight">
-            Crowd Analytics Platform
+          <span className="text-lg font-semibold text-slate-900 tracking-tight">
+            Crowd Analytics
           </span>
         </div>
+
+        {/* Desktop Buttons */}
         <div className="hidden md:flex gap-4 items-center">
-          <button className="px-5 py-2 bg-transparent border border-gray-200 rounded-md text-sm font-medium hover:bg-gray-50 hover:border-gray-300 text-slate-600 transition-all">
+          <button className="cursor-pointer px-5 py-2 bg-transparent border border-gray-200 rounded-md text-sm font-medium hover:bg-gray-50 hover:border-gray-300 text-slate-600 transition-all">
             Documentation
           </button>
-          <button className="px-5 py-2 bg-transparent border border-gray-200 rounded-md text-sm font-medium hover:bg-gray-50 hover:border-gray-300 text-slate-600 transition-all">
-            API Access
+          <button
+            onClick={() => setIsDeleteModalOpen(true)}
+            className="cursor-pointer w-full px-4 py-2 bg-transparent border border-red-400 rounded-md text-sm font-medium text-red-600 hover:bg-red-50 transition-all"
+          >
+            Delete Account
           </button>
           <button
-            onClick={() => {
-              set_username(null);
-              navigate("/login", { replace: true });
-            }}
-            className="px-5 py-2 bg-blue-600 text-white border border-blue-600 rounded-md text-sm font-medium hover:bg-blue-700 transition-all"
+            // onClick={() => {
+            //   set_username(null);
+            //   navigate("/login", { replace: true });
+            // }}
+            onClick={() => setIsLogoutModalOpen(true)}
+            className="cursor-pointer px-5 py-2 bg-blue-600 text-white border border-blue-600 rounded-md text-sm font-medium hover:bg-blue-700 transition-all"
           >
             Logout
           </button>
         </div>
+
+        {/* Mobile Hamburger */}
+        <div className="md:hidden">
+          <button
+            onClick={() => setMenuOpen((prev) => !prev)}
+            className="p-2 rounded-md hover:bg-gray-100 transition"
+          >
+            <svg
+              className="w-6 h-6 text-gray-700"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 6h16M4 12h16M4 18h16"
+              />
+            </svg>
+          </button>
+        </div>
       </nav>
+
+      {/* Mobile Menu (visible when toggled) */}
+      {menuOpen && (
+        <div className="md:hidden bg-white border-b border-gray-200 px-4 py-4 space-y-3 shadow-sm sticky top-16 z-50">
+          <button className="cursor-pointer w-full px-4 py-2 bg-transparent border border-gray-200 rounded-md text-sm font-medium text-slate-600 hover:bg-gray-50 transition-all">
+            Documentation
+          </button>
+          <button
+            onClick={() => setIsDeleteModalOpen(true)}
+            className="cursor-pointer w-full px-4 py-2 bg-transparent border border-red-400 rounded-md text-sm font-medium text-red-600 hover:bg-red-50 transition-all"
+          >
+            Delete Account
+          </button>
+          <button
+            // onClick={() => {
+            //   set_username(null);
+            //   navigate("/login", { replace: true });
+            // }}
+            onClick={() => setIsLogoutModalOpen(true)}
+            className="cursor-pointer w-full px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-all"
+          >
+            Logout
+          </button>
+        </div>
+      )}
+
+      <DeleteModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+      />
+
+      <LogoutModal
+        isOpen={isLogoutModalOpen}
+        onClose={() => setIsLogoutModalOpen(false)}
+      />
 
       <div className="max-w-[1600px] mx-auto px-6 md:px-10 py-6 md:py-8">
         {/* Page Header */}
@@ -544,7 +624,7 @@ const Dashboard = () => {
                 <button
                   onClick={handleAnalyze}
                   disabled={!currentFile || isProcessing}
-                  className="w-full px-5 py-3 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed disabled:opacity-60 transition-all"
+                  className="cursor-pointer w-full px-5 py-3 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed disabled:opacity-60 transition-all"
                 >
                   {isProcessing ? "Analyzing..." : "Analyze Media"}
                 </button>
@@ -650,16 +730,16 @@ const Dashboard = () => {
                 <ul className="space-y-2">
                   <li className="text-xs text-slate-600 flex items-center gap-2">
                     <span className="text-blue-600 font-bold">•</span>
-                    Model: YOLOv8 Object Detection
+                    Model: YOLOv8n Object Detection
                   </li>
-                  <li className="text-xs text-slate-600 flex items-center gap-2">
+                  {/* <li className="text-xs text-slate-600 flex items-center gap-2">
                     <span className="text-blue-600 font-bold">•</span>
                     Resolution: Up to 4K supported
-                  </li>
-                  <li className="text-xs text-slate-600 flex items-center gap-2">
+                  </li> */}
+                  {/* <li className="text-xs text-slate-600 flex items-center gap-2">
                     <span className="text-blue-600 font-bold">•</span>
                     Max file size: 100MB
-                  </li>
+                  </li> */}
                   <li className="text-xs text-slate-600 flex items-center gap-2">
                     <span className="text-blue-600 font-bold">•</span>
                     Processing: Server-side analysis

@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import useStore from "../store";
+import logo from "./../assets/logo_icon.png";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -10,8 +11,19 @@ export default function Login() {
     password: "",
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [isCheckboxChecked, setIsCheckboxChecked] = useState(true);
   const [message, setMessage] = useState({ text: "", type: "" });
-  const {server  , set_username} = useStore();
+  const { server, set_username, set_user_email } = useStore();
+
+  useEffect(() => {
+    if (
+      localStorage.getItem("username") &&
+      localStorage.getItem("user_email") &&
+      localStorage.getItem("isLogin")
+    ) {
+      navigate("/", { replace: true });
+    }
+  }, []);
 
   const handleChange = (e) => {
     setFormData({
@@ -51,9 +63,15 @@ export default function Login() {
         // Store user data or redirect as needed
         console.log("User data:", result.data);
         set_username(result.data.username);
+        set_user_email(result.data.email);
+        if (isCheckboxChecked) {
+          localStorage.setItem("username", result.data.username);
+          localStorage.setItem("user_email", result.data.email);
+          localStorage.setItem("isLogin", true);
+        }
         setTimeout(() => {
           navigate("/", { replace: true }); // Redirect to home page
-        }, 3000); 
+        }, 3000);
       } else {
         setMessage({ text: result.message, type: "error" });
       }
@@ -77,6 +95,12 @@ export default function Login() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="bg-white rounded-lg shadow-md p-8">
+          <img
+            src={logo}
+            style={{ height: "38px", width: "160px" }}
+            className="justify-self-center mb-2"
+          />
+
           <h1 className="text-2xl font-semibold text-gray-900 text-center mb-6">
             Sign In
           </h1>
@@ -126,16 +150,18 @@ export default function Login() {
               <label className="flex items-center">
                 <input
                   type="checkbox"
+                  checked={isCheckboxChecked}
+                  onChange={(e) => setIsCheckboxChecked(e.target.checked)}
                   className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                 />
                 <span className="ml-2 text-gray-700">Remember me</span>
               </label>
-              <a
-                href="#"
+              <Link
+                to="/forget/password"
                 className="text-blue-600 hover:text-blue-700 font-medium"
               >
                 Forgot password?
-              </a>
+              </Link>
             </div>
 
             {message.text && (
@@ -153,7 +179,7 @@ export default function Login() {
             <button
               onClick={handleLogin}
               disabled={isLoading}
-              className="w-full bg-blue-600 text-white py-2 px-4 rounded-md font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+              className="cursor-pointer w-full bg-blue-600 text-white py-2 px-4 rounded-md font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
             >
               {isLoading ? (
                 <>
