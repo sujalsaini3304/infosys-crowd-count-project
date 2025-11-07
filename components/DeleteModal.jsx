@@ -5,7 +5,7 @@ import useStore from "../store";
 import axios from "axios";
 
 const DeleteModal = ({ isOpen, onClose }) => {
-  const { user_email } = useStore();
+  const { user_email, set_user_email, set_username } = useStore();
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -14,6 +14,7 @@ const DeleteModal = ({ isOpen, onClose }) => {
   const handleConfirm = async () => {
     try {
       setLoading(true);
+
       if (!user_email) {
         return;
       }
@@ -30,6 +31,12 @@ const DeleteModal = ({ isOpen, onClose }) => {
 
       if (response.data?.success) {
         console.log("User deleted:", response.data.message);
+        
+        set_user_email(null);
+        set_username(null);
+        localStorage.clear();
+        sessionStorage.clear();
+
         setTimeout(() => navigate("/login", { replace: true }), 1000);
         return { success: true, message: response.data.message };
       } else {
